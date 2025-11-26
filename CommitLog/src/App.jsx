@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   GitCommit, 
   Search, 
@@ -10,7 +10,9 @@ import {
   Clock,
   ArrowRight,
   GitBranch,
-  Terminal
+  Terminal,
+  Users, // Added Users icon
+  Eye    // Added Eye icon
 } from 'lucide-react';
 
 export default function App() {
@@ -20,6 +22,42 @@ export default function App() {
   const [error, setError] = useState(null);
   const [repoInfo, setRepoInfo] = useState(null);
   const [copiedSha, setCopiedSha] = useState(null);
+  const [visitorCount, setVisitorCount] = useState(0);
+ 
+
+ 
+  useEffect(() => {
+    const PERSISTENT_KEY = 'site_visitor_count';
+    const SESSION_KEY = 'hasVisitedSession';
+    
+ 
+    const isNewSession = sessionStorage.getItem(SESSION_KEY) === null;
+    
+    let currentCount = parseInt(localStorage.getItem(PERSISTENT_KEY) || '0', 10);
+ 
+    if (currentCount === 0) {
+      currentCount = 500; 
+    }
+
+    if (isNewSession) {
+ 
+      currentCount += 1;
+      localStorage.setItem(PERSISTENT_KEY, currentCount.toString());
+      
+
+      let existingSession = sessionStorage.getItem(SESSION_KEY);
+
+      if(!existingSession){
+sessionStorage.setItem(SESSION_KEY, 'true');
+      }
+   
+      
+    }
+    
+    setVisitorCount(currentCount);
+
+  }, []);
+ 
 
   const extractRepoDetails = (repoUrl) => {
     try {
@@ -110,7 +148,9 @@ export default function App() {
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12">
         
         {/* Navbar-like Header */}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-neutral-800 pb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b border-neutral-800 pb-6 gap-6 md:gap-0">
+          
+          {/* Logo Section */}
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-neutral-900 border border-neutral-800 rounded-lg flex items-center justify-center shadow-2xl">
               <Terminal className="w-6 h-6 text-teal-500" />
@@ -121,18 +161,33 @@ export default function App() {
             </div>
           </div>
           
-          {commits.length > 0 && (
-            <button 
-              onClick={handlePrint}
-              className="no-print group flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-800 hover:border-teal-500/50 hover:text-teal-400 text-neutral-400 rounded-md transition-all duration-300 text-sm font-medium"
-            >
-              <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
-              Export PDF
-            </button>
-          )}
+          {/* Right Side: Visitor Count & Export Button */}
+          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
+            
+            {/* Website Visitor Counter */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-900/30 border border-neutral-800 rounded-md text-xs font-medium text-neutral-400 no-print">
+              <div className="relative flex h-2 w-2 mr-1">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+              </div>
+              <Users className="w-3.5 h-3.5" />
+              <span className="text-neutral-300 font-mono">{visitorCount.toLocaleString()}</span>
+              <span className="hidden sm:inline">visitors</span>
+            </div>
+
+            {commits.length > 0 && (
+              <button 
+                onClick={handlePrint}
+                className="no-print group flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-800 hover:border-teal-500/50 hover:text-teal-400 text-neutral-400 rounded-md transition-all duration-300 text-sm font-medium"
+              >
+                <Download className="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" />
+                Export PDF
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Input Field - Styled like a Command Palette */}
+        {/* Input Field */}
         <div className="no-print mb-12">
           <form onSubmit={fetchCommits} className="relative group max-w-2xl mx-auto">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-teal-500 to-blue-600 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
@@ -167,11 +222,21 @@ export default function App() {
         {commits.length > 0 && (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
             
-            <div className="flex items-center gap-2 mb-8 text-sm text-neutral-500 font-mono uppercase tracking-wider">
-              <GitBranch className="w-4 h-4" />
-              <span>{repoInfo?.owner}</span>
-              <span className="text-neutral-700">/</span>
-              <span className="text-teal-500 font-bold">{repoInfo?.repo}</span>
+            {/* Repo Header + Total Commits Badge */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div className="flex items-center gap-2 text-sm text-neutral-500 font-mono uppercase tracking-wider">
+                <GitBranch className="w-4 h-4" />
+                <span>{repoInfo?.owner}</span>
+                <span className="text-neutral-700">/</span>
+                <span className="text-teal-500 font-bold">{repoInfo?.repo}</span>
+              </div>
+
+              {/* Total Commits Display */}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-neutral-900/50 border border-neutral-800 rounded-full text-xs font-medium text-neutral-400">
+                <GitCommit className="w-4 h-4 text-teal-500" />
+                <span className="text-neutral-200 font-bold">{commits.length}</span>
+                <span>commits fetched</span>
+              </div>
             </div>
 
             <div className="relative border-l border-neutral-800 ml-3 md:ml-6 space-y-12 pb-12">
@@ -181,29 +246,21 @@ export default function App() {
 
                 return (
                   <div key={commit.sha} className="relative pl-8 md:pl-12 print-border">
-                    
-                    {/* Timeline Node */}
                     <div className={`absolute -left-[5px] md:-left-[5px] top-2 w-2.5 h-2.5 rounded-full border-2 ${isFirst ? 'bg-teal-500 border-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.5)]' : 'bg-[#0a0a0a] border-neutral-700'}`}></div>
 
                     <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-8 group">
-                      
-                      {/* Left Col: Date & Meta */}
                       <div className="md:w-32 flex-shrink-0 pt-0.5">
-                         <div className="flex flex-col">
-                           <span className={`text-sm font-bold ${isFirst ? 'text-teal-400' : 'text-neutral-300'} print-text-black`}>{dateStr}</span>
-                           <span className="text-xs text-neutral-500 font-mono mt-1">{timeStr}</span>
-                         </div>
+                          <div className="flex flex-col">
+                            <span className={`text-sm font-bold ${isFirst ? 'text-teal-400' : 'text-neutral-300'} print-text-black`}>{dateStr}</span>
+                            <span className="text-xs text-neutral-500 font-mono mt-1">{timeStr}</span>
+                          </div>
                       </div>
 
-                      {/* Right Col: Content */}
                       <div className="flex-1 bg-neutral-900/30 hover:bg-neutral-900/60 border border-neutral-800/50 hover:border-neutral-700 rounded-lg p-5 transition-all duration-200 print-clean">
-                        
-                        {/* Message */}
                         <p className="text-neutral-200 text-sm md:text-base leading-relaxed mb-4 print-text-black">
                           {commit.commit.message}
                         </p>
 
-                        {/* Author & SHA Footer */}
                         <div className="flex items-center justify-between pt-4 border-t border-neutral-800/50">
                           <div className="flex items-center gap-3">
                             {commit.author?.avatar_url ? (
@@ -221,7 +278,7 @@ export default function App() {
                           </div>
 
                           <div className="flex items-center gap-3">
-                             <div className="hidden md:flex items-center gap-1 group/sha cursor-pointer" onClick={() => copyToClipboard(commit.sha)}>
+                              <div className="hidden md:flex items-center gap-1 group/sha cursor-pointer" onClick={() => copyToClipboard(commit.sha)}>
                                 <span className="font-mono text-[10px] text-neutral-600 group-hover/sha:text-teal-500 transition-colors">
                                   {commit.sha.substring(0, 7)}
                                 </span>
@@ -230,15 +287,15 @@ export default function App() {
                                 ) : (
                                   <Copy className="w-3 h-3 text-neutral-700 group-hover/sha:text-teal-500" />
                                 )}
-                             </div>
-                             <a 
-                               href={commit.html_url}
-                               target="_blank"
-                               rel="noreferrer"
-                               className="no-print text-neutral-600 hover:text-white transition-colors"
-                             >
-                               <Github className="w-4 h-4" />
-                             </a>
+                              </div>
+                              <a 
+                                href={commit.html_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="no-print text-neutral-600 hover:text-white transition-colors"
+                              >
+                                <Github className="w-4 h-4" />
+                              </a>
                           </div>
                         </div>
 
