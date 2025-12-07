@@ -1,7 +1,7 @@
 <img width="1903" height="864" alt="image" src="https://github.com/user-attachments/assets/ead8529d-1394-422b-b15a-3174c500a77d" />
 
 
-git clone 
+git clone https://github.com/Viishal-62/CommitChecker.git
 npm install 
 npm run dev
 
