@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  const [url, setUrl] = useState('https://github.com/Vishalpandey1799/falcon-voice-agent');
+  const [url, setUrl] = useState('https://github.com/Viishal-62/CommitChecker');
   const [commits, setCommits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
